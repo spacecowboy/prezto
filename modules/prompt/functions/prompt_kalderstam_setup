@@ -1,0 +1,80 @@
+#
+# A theme based on Steve Losh's Extravagant Prompt with vcs_info integration.
+#
+# Authors:
+#   Steve Losh <steve@stevelosh.com>
+#   Bart Trojanowski <bart@jukie.net>
+#   Brian Carper <brian@carper.ca>
+#   kalderstam <kalderstam@gmail.com>
+#   Sorin Ionescu <sorin.ionescu@gmail.com>
+#   Jonas Kalderstam <jonas@kalderstam.se>
+#
+
+function prompt_kalderstam_precmd {
+  git-info
+}
+
+function prompt_kalderstam_setup {
+  setopt LOCAL_OPTIONS
+  unsetopt XTRACE KSH_ARRAYS
+  prompt_opts=(cr percent subst)
+
+  # Load required functions.
+  autoload -Uz add-zsh-hook
+
+  # Add hook for calling git_info before each command.
+  add-zsh-hook precmd prompt_kalderstam_precmd
+
+  # Use extended color pallete if available.
+  if [[ $TERM = *256color* || $TERM = *rxvt* ]]; then
+    _prompt_kalderstam_colors=(
+      "%F{81}"  # Turquoise
+      "%F{166}" # Orange
+      "%F{135}" # Purple
+      "%F{161}" # Hotpink
+      "%F{118}" # Limegreen
+    )
+  else
+    _prompt_kalderstam_colors=(
+      "%F{cyan}"
+      "%F{yellow}"
+      "%F{magenta}"
+      "%F{red}"
+      "%F{green}"
+    )
+  fi
+
+  # Formats:
+  #   %b - branchname
+  #   %u - unstagedstr (see below)
+  #   %c - stagedstr (see below)
+  #   %a - action (e.g. rebase-i)
+  #   %R - repository path
+  #   %S - path in the repository
+  local branch_format="(${_prompt_kalderstam_colors[1]}%b%f%u%c)"
+  local action_format="(${_prompt_kalderstam_colors[5]}%a%f)"
+  local unstaged_format="${_prompt_kalderstam_colors[2]}●%f"
+  local staged_format="${_prompt_kalderstam_colors[5]}●%f"
+  
+  # Set git-info parameters
+  zstyle ':prezto:module:git:info' verbose 'yes'
+  
+  zstyle ':prezto:module:git:info:branch' format '%F{green}%b%f'
+  
+  #zstyle ':prezto:module:git:info:clean' format '%F{green}✔%f'
+  zstyle ':prezto:module:git:info:dirty' format '%F{red}✗%f'
+  zstyle ':prezto:module:git:info:remote' format '%F{blue}%R%f'
+  zstyle ':prezto:module:git:info:ahead' format '%%B%F{magenta}⬆%A%f%%b'
+  zstyle ':prezto:module:git:info:behind' format '%%B%F{red}⬇%B%f%%b'
+  zstyle ':prezto:module:git:info:keys' format \
+    'prompt' ' %F{green}(%f$(coalesce "%b" "%p" "%c")${git_info[rprompt]}%s%F{green})%f' \
+    'rprompt' '%D%A..%R%B'
+
+  # Define prompts.
+  PROMPT="
+${_prompt_kalderstam_colors[3]}%n%f at ${_prompt_kalderstam_colors[2]}%m%f in ${_prompt_kalderstam_colors[5]}%~%f "'${(e)git_info[prompt]}'"
+$ "
+  RPROMPT=''
+}
+
+prompt_kalderstam_setup "$@"
